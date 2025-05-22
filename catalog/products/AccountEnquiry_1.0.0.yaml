@@ -1,0 +1,319 @@
+swagger: '2.0'
+info:
+  title: AccountEnquiry
+  version: 1.0.0
+  description: ' To fetch the details of account.'
+  x-ibm-name: AccountEnquiry
+paths:
+  /accountEnquiry:
+    post:
+      tags:
+        - AccountEnquiry
+      summary: To fetch the details of account.
+      operationId: postAccountEnquiry
+      responses:
+        '200':
+          description: The operation was successful.
+          schema:
+            $ref: '#/definitions/AccountEnquiryResType'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/AccountEnquiryReqType'
+          description: To fetch the details of account.
+          required: true
+basePath: /accountenquiry/v1
+definitions:
+  AccountEnquiryReqType:
+    type: object
+    properties:
+      AccountEnquiryReq:
+        type: object
+        properties:
+          Header:
+            type: object
+            properties:
+              MsgVersion:
+                type: string
+                maxLength: 20
+              SrcAppId:
+                type: string
+                maxLength: 20
+              OrgId:
+                type: string
+                maxLength: 5
+              SrcCompId:
+                type: string
+                maxLength: 20
+              SrcMsgId:
+                type: string
+                maxLength: 255
+              SrcAppTimestamp:
+                type: string
+                maxLength: 14
+              BusinessDate:
+                type: string
+                maxLength: 8
+              SrvCode:
+                type: string
+                maxLength: 20
+              SrvName:
+                type: string
+                maxLength: 50
+              TransactionRefNo:
+                type: string
+                maxLength: 20
+              EAITrackingID:
+                type: string
+                maxLength: 20
+              Language:
+                type: string
+                maxLength: 2
+              BankId:
+                type: string
+                maxLength: 9
+              CorporateId:
+                type: string
+                maxLength: 32
+              UserId:
+                type: string
+                maxLength: 32
+              InstanceId:
+                type: string
+                maxLength: 20
+              TargetApp:
+                type: string
+                maxLength: 20
+              Status:
+                type: string
+                maxLength: 20
+              EAITimestamp:
+                type: string
+                maxLength: 14
+              SecurityInfo:
+                type: object
+                properties:
+                  UserId:
+                    type: string
+                    maxLength: 20
+                  Password:
+                    type: string
+                    maxLength: 255
+                required:
+                  - UserId
+                  - Password
+            required:
+              - SrcAppId
+              - OrgId
+              - SrcMsgId
+              - SrvCode
+              - SrvName
+              - TransactionRefNo
+              - InstanceId
+          Body:
+            type: object
+            properties:
+              AccountNumber1:
+                type: string
+                maxLength: 17
+              AccountNumber2:
+                type: string
+                maxLength: 17
+            required:
+              - AccountNumber1
+  AccountEnquiryResType:
+    type: object
+    properties:
+      AccountEnquiryRes:
+        type: object
+        properties:
+          Header:
+            type: object
+            properties:
+              MsgVersion:
+                type: string
+                maxLength: 20
+              SrcAppId:
+                type: string
+                maxLength: 20
+              OrgId:
+                type: string
+                maxLength: 5
+              SrcCompId:
+                type: string
+                maxLength: 20
+              SrcMsgId:
+                type: string
+                maxLength: 255
+              SrcAppTimestamp:
+                type: string
+                maxLength: 14
+              BusinessDate:
+                type: string
+                maxLength: 8
+              SrvCode:
+                type: string
+                maxLength: 20
+              SrvName:
+                type: string
+                maxLength: 50
+              TransactionRefNo:
+                type: string
+                maxLength: 20
+              EAITrackingID:
+                type: string
+                maxLength: 20
+              Language:
+                type: string
+                maxLength: 2
+              BankId:
+                type: string
+                maxLength: 9
+              CorporateId:
+                type: string
+                maxLength: 32
+              UserId:
+                type: string
+                maxLength: 32
+              InstanceId:
+                type: string
+                maxLength: 20
+              TargetApp:
+                type: string
+                maxLength: 20
+              Status:
+                type: string
+                maxLength: 20
+              EAITimestamp:
+                type: string
+                maxLength: 14
+              SecurityInfo:
+                type: object
+                properties:
+                  UserId:
+                    type: string
+                    maxLength: 20
+                  Password:
+                    type: string
+                    maxLength: 255
+                required:
+                  - UserId
+                  - Password
+            required:
+              - SrcAppId
+              - OrgId
+              - SrcMsgId
+              - SrvCode
+              - SrvName
+              - TransactionRefNo
+              - InstanceId
+              - Status
+              - EAITimestamp
+          Body:
+            type: object
+            properties:
+              AccountDetails:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    AccountNumber:
+                      type: string
+                      maxLength: 16
+                    AccountSystem:
+                      type: string
+                      maxLength: 3
+                    IBAN:
+                      type: string
+                      maxLength: 24
+                    AccountType:
+                      type: string
+                      maxLength: 20
+                    AccountCurrency:
+                      type: string
+                      maxLength: 3
+                    AccountStatus:
+                      type: string
+                      maxLength: 5
+                    AvailableBalance:
+                      type: number
+                      maxLength: 18
+                    CIFType:
+                      type: string
+                      maxLength: 20
+                    BalanceDate:
+                      type: string
+                      maxLength: 10
+                    IDNumber:
+                      type: string
+                      maxLength: 24
+                    PayerType:
+                      type: string
+                      maxLength: 3
+                    IDType:
+                      type: string
+                      maxLength: 10
+                    Name:
+                      type: string
+                      maxLength: 100
+                    UserType:
+                      type: string
+                      maxLength: 2
+                    PrimarySecCode:
+                      type: string
+                      maxLength: 14
+                    SecondarySecCode:
+                      type: string
+                      maxLength: 14
+                    Nationality:
+                      type: string
+                      maxLength: 2
+                  required:
+                    - AccountNumber
+          ReturnStatus:
+            type: object
+            properties:
+              ReturnCode:
+                type: string
+                maxLength: 15
+              ReturnDesc:
+                type: string
+                maxLength: 100
+              Type:
+                type: string
+                maxLength: 32
+              Trace:
+                type: string
+                maxLength: 255
+              Data:
+                type: string
+                maxLength: 255
+            required:
+              - ReturnCode
+              - ReturnDesc
+x-ibm-configuration:
+  assembly:
+    execute:
+      - invoke:
+          version: 2.0.0
+          title: invoke
+          timeout: 60
+          verb: keep
+          cache-response: protocol
+          cache-ttl: 900
+          target-url: http://win-rpa01.ucmcswg.com:7800$(request.path)
+    catch: []
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  cors:
+    enabled: true
+schemes:
+  - https

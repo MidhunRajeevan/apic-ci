@@ -1,0 +1,21 @@
+pipeline {
+    agent any
+    stages {
+        stage('Deploy API') {
+            steps {
+                script {
+                    // Run the publish script
+                    bat 'Publish_script.bat'
+                }
+            }
+        }
+    }
+    post {
+        success {
+            echo 'API deployment completed successfully.'
+        }
+        failure {
+            echo 'API deployment failed.'
+        }
+    }
+}

@@ -1,0 +1,465 @@
+swagger: '2.0'
+info:
+  title: Routing And Transformation
+  x-ibm-name: routing-and-transformation
+  version: 1.0.0
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - set-variable:
+          version: 2.0.0
+          title: set-variable
+          actions:
+            - set: allowed-ips
+              value: $(client-ip)
+              type: string
+      - gatewayscript:
+          version: 2.0.0
+          title: gatewayscript
+          source: >
+            var appName=context.get('client.app.name');
+
+            //context.set('appName',appName);
+
+            var headers=context.get('message.headers');
+
+
+            var clientIP=headers['X-Client-IP'];
+
+            console.error('CLIENT IP>>>>>>'+clientIP);
+
+            var allowedIPs = context.get('allowed-ips');
+
+
+            var iplist = clientIP ? clientIP.split(',').map(ip => ip.trim()) :
+            [];
+
+
+            var isAllowedIP = iplist.some(function(ip){
+              return allowedIPs.includes(ip);
+            });
+
+
+            if(appName=='test-app')
+
+            {
+                context.set('appFlag',true);
+            }
+
+            else {
+                context.set('appFlag',false);
+            }
+      - switch:
+          version: 2.0.0
+          title: Is IP Valid?
+          case:
+            - condition: isAllowedIP = false
+              execute:
+                - throw:
+                    version: 2.1.0
+                    title: Invalid_IP
+                    name: Invalid_IP
+      - switch:
+          version: 2.0.0
+          title: AppName?
+          case:
+            - condition: appFlag=true
+              execute:
+                - ratelimit:
+                    version: 2.4.0
+                    title: assembly-limit
+                    source: plan-named
+                    burst-limit:
+                      - name: assembly-limit
+                        operation: consume
+      - gatewayscript:
+          version: 2.0.0
+          title: Validate Request
+          source: |-
+            var requestBody = context.get('message.body');
+
+            context.message.body.readAsJSON(function(error, request) {
+                
+                function containsHTMLTags(str){
+                    return /<\/*[a-z][\s\S]*?>/i.test(str);
+                }
+                
+                for (var key in request) {
+                    if (typeof request[key] === 'string' && containsHTMLTags(request[key])) {
+                        context.set('isInvalidData', true);
+                    }
+                }
+            });
+      - switch:
+          version: 2.0.0
+          title: IsInvalidData?
+          case:
+            - condition: isInvalidData=true
+              execute:
+                - throw:
+                    version: 2.1.0
+                    title: Invalid_Data
+                    name: Invalid_Data
+      - switch:
+          version: 2.0.0
+          title: Resource?
+          case:
+            - condition: ($operationPath() = '/login')
+              execute:
+                - parse:
+                    version: 2.2.0
+                    title: parse
+                    parse-settings-reference:
+                      default: apic-default-parsesettings
+                    input: message
+                - json-to-xml:
+                    version: 2.0.0
+                    title: json-to-xml
+                    root-element-name: json
+                    always-output-root-element: false
+                    unnamed-element-name: element
+            - condition: ($operationPath() = '/logout')
+              execute:
+                - parse:
+                    version: 2.2.0
+                    title: parse
+                    parse-settings-reference:
+                      default: apic-default-parsesettings
+                    input: message
+                - xml-to-json:
+                    version: 2.0.0
+                    title: xml-to-json
+            - condition: ($operationPath() = '/otp')
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: gatewayscript
+                    source: >-
+
+                      var currentTime = new Date();
+
+
+                      // Format the current time as an ISO string
+
+                      var isoTime = currentTime.toISOString();
+
+
+                      // Set the current time in the context variable
+
+                      context.set('currentTime', isoTime);
+
+
+                      context.message.body.readAsJSON (function (error, json){
+
+                      if (error) {
+
+                      throw error;
+                          }
+
+                      context.set('username',json.username);
+
+                      context.set('password',json.password);
+
+                      context.set('clientId',json.clientId);
+
+                      context.set('channelCode',json.channelCode);
+
+                      context.set('apiKey',json.apiKey);
+
+                      //context.set('cancellationReason',json.cancellationReason);
+
+                      });
+                - xslt:
+                    version: 2.1.0
+                    title: xslt
+                    input: false
+                    serialize-output: false
+                    source: "<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"       xmlns:dp=\"http://www.datapower.com/extensions\"       xmlns:apigw=\"http://www.ibm.com/xmlns/datapower/2017/11/apigateway\" extension-element-prefixes=\"dp\"       version=\"1.0\">\n    <xsl:variable name=\"request\" select=\"apigw:get-variable('request.body')\"/>\n      <xsl:template  match=\"/\">\n          <xsl:variable name=\"output\">\n               <soapenv:Envelope xmlns:apt=\"apt:AppointmentService\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n                    <soapenv:Header/>\n                        <soapenv:Body>\n                        <apt:getGlobalServicesRequest>\n                            <xsl:if test=\"$request\">\n                            \t<apt:username><xsl:value-of select=\"apigw:get-variable('username')\"/></apt:username>\n                            \t<apt:password><xsl:value-of select=\"apigw:get-variable('password')\"/></apt:password>\n                            \t<apt:channelCode><xsl:value-of select=\"apigw:get-variable('channelCode')\"/></apt:channelCode>\n                            \t<apt:clientId><xsl:value-of select=\"apigw:get-variable('clientId')\"/></apt:clientId>\n                            \t<apt:apiKey><xsl:value-of select=\"apigw:get-variable('apiKey')\"/></apt:apiKey>\n                             </xsl:if>\n                              </apt:getGlobalServicesRequest>\n                            </soapenv:Body>\n                </soapenv:Envelope>\n            </xsl:variable>\n    <xsl:message dp:priority=\"error\">\n         XML Request is\n         <xsl:copy-of select=\"$output\"/>\n      </xsl:message>\n      <xsl:copy-of select=\"$output\"/>\n   </xsl:template>\n   <xsl:template match=\"node()|@*\">\n      <xsl:copy>\n         <xsl:apply-templates select=\"node()|@*\"/>\n      </xsl:copy>\n   </xsl:template>\n</xsl:stylesheet>"
+                    compile-settings: {}
+            - condition: ($operationPath() = '/generate-token')
+              execute:
+                - set-variable:
+                    version: 2.0.0
+                    title: set-variable
+                    actions:
+                      - set: hs256-key
+                        value: >-
+                          { "alg": "HS256", "kty": "oct", "use": "sig", "k":
+                          "o5yErLaE-dbgVpSw65Rq57OA9dHyaF66Q_Et5azPa-XUjbyP0w9iRWhR4kru09aFfQLXeIODIN4uhjElYKXt8n76jt0Pjkd2pqk4t9abRF6tnL19GV4pflfL6uvVKkP4weOh39tqHt4TmkBgF2P-gFhgssZpjwq6l82fz3dUhQ2nkzoLA_CnyDGLZLd7SZ1yv73uzfE2Ot813zmig8KTMEMWVcWSDvy61F06vs_6LURcq_IEEevUiubBxG5S2akNnWigfpbhWYjMI5M22FOCpdcDBt4L7K1-yHt95Siz0QUb0MNlT_X8F76wH7_A37GpKKJGqeaiNWmHkgWdE8QWDQ",
+                          "kid": "hs256-key" }
+                        type: string
+                - jwt-generate:
+                    version: 2.0.0
+                    title: jwt-generate
+                    jwt: generated.jwt
+                    iss-claim: request.headers.iss-claim
+                    exp-claim: 3600
+                    aud-claim: request.headers.aud-claim
+                    jws-alg: HS256
+                    jws-jwk: hs256-key
+                - gatewayscript:
+                    version: 2.0.0
+                    title: gatewayscript
+                    source: |-
+                      var jwt=context.get('generated.jwt');
+                      context.set('message.body',jwt);
+            - condition: ($operationPath() = '/validate-jwt')
+              execute:
+                - set-variable:
+                    version: 2.0.0
+                    title: set-variable
+                    actions:
+                      - set: hs256-key
+                        value: >-
+                          { "alg": "HS256", "kty": "oct", "use": "sig", "k":
+                          "o5yErLaE-dbgVpSw65Rq57OA9dHyaF66Q_Et5azPa-XUjbyP0w9iRWhR4kru09aFfQLXeIODIN4uhjElYKXt8n76jt0Pjkd2pqk4t9abRF6tnL19GV4pflfL6uvVKkP4weOh39tqHt4TmkBgF2P-gFhgssZpjwq6l82fz3dUhQ2nkzoLA_CnyDGLZLd7SZ1yv73uzfE2Ot813zmig8KTMEMWVcWSDvy61F06vs_6LURcq_IEEevUiubBxG5S2akNnWigfpbhWYjMI5M22FOCpdcDBt4L7K1-yHt95Siz0QUb0MNlT_X8F76wH7_A37GpKKJGqeaiNWmHkgWdE8QWDQ",
+                          "kid": "hs256-key" }
+                        type: string
+                - jwt-validate:
+                    version: 2.0.0
+                    title: jwt-validate
+                    jwt: request.headers.authorization
+                    output-claims: decoded.claims
+                    jws-jwk: hs256-key
+                - gatewayscript:
+                    version: 2.0.0
+                    title: gatewayscript
+                    source: |-
+                      var claim=context.get('decoded.claims');
+                      context.set('message.body',claim);
+      - redact:
+          version: 2.0.0
+          title: redact
+          redactions:
+            - action: redact
+              path: '**.client_id'
+    catch:
+      - errors:
+          - Invalid_IP
+        execute:
+          - map:
+              version: 2.1.0
+              title: map
+              inputs: {}
+              outputs:
+                output:
+                  schema:
+                    $ref: '#/definitions/Error'
+                  variable: message.body
+                  content: application/json
+              actions:
+                - set: output.status
+                  value: '403'
+                - set: output.error
+                  value: Forbidden
+                - set: output.description
+                  value: '''User IP is not allowed to access the API'''
+          - set-variable:
+              version: 2.0.0
+              title: set-variable
+              actions:
+                - set: message.status.code
+                  value: '403'
+                  type: string
+      - errors:
+          - Invalid_Data
+        execute:
+          - map:
+              version: 2.1.0
+              title: map
+              inputs: {}
+              outputs:
+                output:
+                  schema:
+                    $ref: '#/definitions/Error'
+                  variable: message.body
+                  content: application/json
+              actions:
+                - set: output.status
+                  value: '400'
+                - set: output.error
+                  value: '''Bad Request'''
+                - set: output.description
+                  value: '''The request could not be processed due to malformed input.'''
+          - set-variable:
+              version: 2.0.0
+              title: set-variable
+              actions:
+                - set: message.status.code
+                  value: '400'
+                  type: string
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    enabled: true
+    success-content: header
+    error-content: payload
+basePath: /v1
+paths:
+  /login:
+    post:
+      consumes: []
+      produces: []
+      parameters:
+        - name: client_id
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: client_secret
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: Body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/request'
+      responses:
+        '200':
+          description: ''
+  /logout:
+    post:
+      consumes: []
+      produces: []
+      parameters:
+        - name: client_id
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: client_secret
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: Body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/request'
+      responses:
+        '200':
+          description: ''
+  /otp:
+    post:
+      consumes: []
+      produces: []
+      parameters:
+        - name: client_id
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: client_secret
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: Body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/request'
+      responses:
+        '200':
+          description: ''
+  /generate-token:
+    get:
+      responses:
+        '200':
+          description: 200 OK
+          schema:
+            type: string
+      consumes: []
+      produces: []
+      parameters:
+        - name: iss-claim
+          required: true
+          in: header
+          type: string
+          description: Enter https://myidp.ibm.com
+        - name: aud-claim
+          required: true
+          in: header
+          type: string
+          description: Enter ClientID1
+  /validate-jwt:
+    get:
+      responses:
+        '200':
+          description: 200 OK
+          schema:
+            type: string
+      consumes: []
+      produces: []
+      parameters:
+        - name: Authorization
+          required: true
+          in: header
+          type: string
+          description: Enter Bearer <jwt>
+definitions:
+  Error:
+    title: Error
+    type: object
+    properties:
+      status:
+        title: status
+        type: string
+      error:
+        title: error
+        type: string
+      description:
+        title: description
+        type: string
+  request:
+    title: request
+    example:
+      username: string
+      password: string
+      channelCode: string
+      clientId: string
+      apiKey: string
+    type: object
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+      channelCode:
+        type: string
+    required:
+      - username
+      - password
+      - channelCode
+securityDefinitions:
+  client_id:
+    type: apiKey
+    x-key-type: client_id
+    name: client_id
+    in: header
+  client_secret:
+    type: apiKey
+    x-key-type: client_secret
+    name: client_secret
+    in: header
+schemes:
+  - https
+security:
+  - client_id: []
+    client_secret: []

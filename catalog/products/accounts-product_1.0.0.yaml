@@ -1,0 +1,111 @@
+info:
+  version: 1.0.0
+  title: Accounts Product
+  name: accounts-product
+gateways:
+  - datapower-api-gateway
+plans:
+  platinum-plan:
+    title: Platinum Plan
+    rate-limits:
+      platinum:
+        value: 15/1minute
+        hard-limit: true
+    assembly-burst-limits:
+      assembly-limit:
+        - value: 3/1minute
+          cache-only: true
+          is-client: true
+          use-api-name: false
+          use-app-id: false
+          use-client-id: false
+    billing:
+      currency: USD
+      price: '25'
+      period: 1
+      period-unit: month
+      trial-period: 5
+      trial-period-unit: day
+      billing: account
+    apis:
+      AccountEnquiry1.0.0: {}
+      routing-and-transformation1.0.0: {}
+      native-oauth2.0.0: {}
+  silver-plan:
+    title: Silver Plan
+    description: ''
+    rate-limits:
+      silver:
+        value: 5/1minute
+        hard-limit: true
+    assembly-burst-limits:
+      assembly-limit:
+        - value: 3/1minute
+          cache-only: true
+          is-client: true
+          use-api-name: false
+          use-app-id: false
+          use-client-id: false
+    billing:
+      currency: USD
+      price: '10'
+      period: 1
+      period-unit: month
+      trial-period: 5
+      trial-period-unit: day
+      billing: account
+    apis:
+      AccountEnquiry1.0.0: {}
+      routing-and-transformation1.0.0: {}
+      native-oauth2.0.0: {}
+  gold-plan:
+    title: Gold Plan
+    rate-limits:
+      gold:
+        value: 10/1minute
+        hard-limit: true
+    burst-limits:
+      gold-burst-limit:
+        value: 10/1minute
+    assembly-burst-limits:
+      assembly-limit:
+        - value: 3/1minute
+          cache-only: true
+          is-client: true
+          use-api-name: false
+          use-app-id: false
+          use-client-id: false
+    billing:
+      currency: USD
+      price: '15'
+      period: 1
+      period-unit: month
+      trial-period: 5
+      trial-period-unit: day
+      billing: account
+    apis:
+      AccountEnquiry1.0.0: {}
+      routing-and-transformation1.0.0: {}
+      native-oauth2.0.0: {}
+apis:
+  AccountEnquiry1.0.0:
+    $ref: AccountEnquiry_1.0.0.yaml
+  routing-and-transformation1.0.0:
+    $ref: routing-and-transformation_1.0.0.yaml
+  native-oauth2.0.0:
+    $ref: native-oauth_2.0.0.yaml
+visibility:
+  view:
+    type: public
+    orgs: []
+    tags: []
+    enabled: true
+  subscribe:
+    type: authenticated
+    orgs: []
+    tags: []
+    enabled: true
+product: 1.0.0
+billings:
+  account:
+    name: billing-test

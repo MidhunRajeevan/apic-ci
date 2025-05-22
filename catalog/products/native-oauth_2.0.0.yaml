@@ -1,0 +1,101 @@
+swagger: '2.0'
+info:
+  title: Native OAuth
+  x-ibm-name: native-oauth
+  version: 2.0.0
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - invoke:
+          title: invoke
+          version: 2.0.0
+          verb: keep
+          target-url: $(target-url)
+          follow-redirects: false
+          timeout: 60
+          parameter-control:
+            type: allowlist
+            values: []
+          header-control:
+            type: blocklist
+            values: []
+          inject-proxy-headers: true
+          persistent-connection: true
+          chunked-uploads: true
+          cache-response: time-to-live
+          cache-ttl: 3600
+    catch: []
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    enabled: true
+    success-content: header
+    error-content: payload
+basePath: /v1
+paths:
+  /demo:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      consumes: []
+      produces: []
+definitions:
+  Error:
+    title: Error
+    type: object
+    properties:
+      status:
+        title: status
+        type: string
+      error:
+        title: error
+        type: string
+      description:
+        title: description
+        type: string
+  request:
+    title: request
+    example:
+      username: string
+      password: string
+      channelCode: string
+      clientId: string
+      apiKey: string
+    type: object
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+      channelCode:
+        type: string
+    required:
+      - username
+      - password
+      - channelCode
+securityDefinitions:
+  oauth:
+    type: oauth2
+    x-ibm-oauth-provider: test-oauth
+    flow: application
+    tokenUrl: https://$(catalog.url)/test-oauth/oauth2/token
+    scopes:
+      test_scope: Sample scope description 1
+security:
+  - oauth:
+      - test_scope
+schemes:
+  - https
