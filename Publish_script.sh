@@ -6,7 +6,7 @@ user="dxadmin"
 password="dx@283283"
 porg="dx"
 catname="test"
-prod="catalog/products/accounts-product_1.0.0.yaml"
+prod="subscription-approval-product_1.0.0.yaml"
 corg="fintech-one"
 app="wallet"
 
