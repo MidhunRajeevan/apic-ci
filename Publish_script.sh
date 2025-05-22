@@ -15,8 +15,8 @@ echo "Log into provider org $porg"
 apic login --server "$server" --username "$user" --password "$password" --realm provider/default-idp-2
 
 echo "Publish $prod to $catname catalog"
-ACMD="apic products:publish $prod --server $server --org $porg --catalog $catname"
-URL=$($ACMD | awk '{print $4}')
+PUBLISH_OUTPUT=$(apic products:publish "$prod" --server "$server" --org "$porg" --catalog "$catname" --format json)
+URL=$(echo "$PUBLISH_OUTPUT" | jq -r '.product_url')
 cat <<EOF > subscriber.txt
 {
   "product_url": "$URL",
