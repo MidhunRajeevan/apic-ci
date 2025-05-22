@@ -16,7 +16,7 @@ apic login --server "$server" --username "$user" --password "$password" --realm 
 
 echo "Publish $prod to $catname catalog"
 PUBLISH_OUTPUT=$(apic products:publish "$prod" --server "$server" --org "$porg" --catalog "$catname" --format json)
-URL=$(echo "$PUBLISH_OUTPUT" | jq -r '.product_url')
+URL=$(echo "$PUBLISH_OUTPUT" | jq -r '.url')
 cat <<EOF > subscriber.txt
 {
   "product_url": "$URL",
