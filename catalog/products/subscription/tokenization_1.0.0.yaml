@@ -123,12 +123,16 @@ definitions:
     properties:
       accountId:
         type: string
+        description: Unique identifier for the account to be tokenized
       customerId:
         type: string
+        description: Unique identifier for the customer who owns the account
       channel:
         type: string
+        description: Channel through which the tokenization request is made (e.g., web, mobile)
       accountType:
         type: string
+        description: Type of the account (e.g., savings, current, credit)
     required:
       - accountId
       - customerId
