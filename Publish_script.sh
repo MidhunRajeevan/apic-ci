@@ -1,15 +1,12 @@
 #!/bin/bash
 set -e
 
-server="apic-mgmt-api-manager-tars-apic.apps.tars.ucmcswg.com"
-user="dxadmin"
-password="dx@283283"
-porg="dx"
-catname="test"
-prod="catalog/products/subscription/subscription-approval-product_1.0.0.yaml"
-corg="fintech-one"
-app="wallet"
-
+# Load environment variables from .env file if it exists
+if [ -f .env ]; then
+  set -o allexport
+  source .env
+  set +o allexport
+fi
 
 echo "Log into provider org $porg"
 apic login --server "$server" --username "$user" --password "$password" --realm provider/default-idp-2
