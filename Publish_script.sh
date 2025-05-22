@@ -5,7 +5,7 @@ server="apic-mgmt-api-manager-tars-apic.apps.tars.ucmcswg.com"
 user="dxadmin"
 password="dx@283283"
 porg="dx"
-catname="retail-banking"
+catname="test"
 prod="accounts-product_1.0.0.yaml"
 corg="fintech-one"
 app="wallet"
@@ -17,8 +17,12 @@ apic login --server "$server" --username "$user" --password "$password" --realm 
 echo "Publish $prod to $catname catalog"
 ACMD="apic products:publish $prod --server $server --org $porg --catalog $catname"
 URL=$($ACMD | awk '{print $4}')
-echo "product_url: $URL" > subscriber.txt
-echo "plan: default-plan" >> subscriber.txt
+cat <<EOF > subscriber.txt
+{
+  "product_url": "$URL",
+  "plan": "default-plan"
+}
+EOF
 cat subscriber.txt
 sleep 1
 
