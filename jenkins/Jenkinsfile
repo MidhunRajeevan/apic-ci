@@ -4,8 +4,8 @@ pipeline {
         stage('Deploy API') {
             steps {
                 script {
-                    // Run the publish script
-                    bat 'Publish_script.bat'
+                    // Run the shell publish script (for Linux agents)
+                    sh '../Publish_script.sh'
                 }
             }
         }
