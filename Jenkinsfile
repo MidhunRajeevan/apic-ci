@@ -5,7 +5,10 @@ pipeline {
             steps {
                 script {
                     // Run the shell publish script (for Linux agents)
-                    sh 'Publish_script.sh'
+                    sh '''
+                        chmod +x Publish_script.sh
+                        ./Publish_script.sh
+                    '''
                 }
             }
         }
