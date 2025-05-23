@@ -4,6 +4,16 @@ pipeline {
         server = 'apic-mgmt-api-manager-tars-apic.apps.tars.ucmcswg.com'
     }
     stages {
+        stage('Validate API and Product') {
+            steps {
+                script {
+                    sh '''                        
+                        echo "Validating Product definition..."
+                        apic validate catalog/products/subscription/subscription-approval-product_1.0.0.yaml
+                    '''
+                }
+            }
+        }
         stage('Deploy API') {
             steps {
                 script {
