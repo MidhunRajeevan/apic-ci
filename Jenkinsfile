@@ -1,17 +1,21 @@
 pipeline {
     agent any
+    environment {
+        server = 'apic-mgmt-api-manager-tars-apic.apps.tars.ucmcswg.com'
+    }
     stages {
         stage('Deploy API') {
             steps {
                 script {
-                    // Run the shell publish script (for Linux agents)
-                    sh '''
-                        chmod +x Publish_script.sh
-                        ./Publish_script.sh
-                    '''
+                    withCredentials([usernamePassword(credentialsId: 'apic-creds', usernameVariable: 'user', passwordVariable: 'password')]) {
+                        sh '''
+                            chmod +x Publish_script.sh
+                            ./Publish_script.sh "$user" "$password" "$server"
+                        '''
+                    }
                 }
             }
-        }
+        }    
     }
     post {
         success {
